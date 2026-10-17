@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#0a1527">
-<title>GRAPH RUNNER 2 | 関数で道を描く</title>
+<title>GRAPH RUNNER 3 | 数式でルートをつくる</title>
 <style>
 :root{color-scheme:dark;--bg:#091426;--ink:#e9f1ff;--sub:#9badc5;--border:#283c56;--panel:#14243a;--field:#0c1b31;--green:#61e8cb;--gold:#ffc66a;--red:#ff7899}
 *{box-sizing:border-box}
@@ -27,28 +27,72 @@ header{height:64px;flex:0 0 auto;display:flex;align-items:center;justify-content
 }
 @media(max-width:760px) and (max-height:540px){.editor-head{display:none}.editor{max-height:43%}.status{display:none}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+/* Touch-first math keypad (inspired by mobile graphing-calculator workflows). */
+.keypad{min-height:0;display:flex;flex-direction:column;gap:5px;user-select:none;-webkit-user-select:none}
+.keypad-tabs{display:flex;gap:6px;align-items:center;margin-bottom:1px}.keypad-tabs button{border:1px solid #395571;border-radius:8px;padding:6px 12px;background:#1f334b;color:#b5c9dc;font-size:12px;font-weight:800}.keypad-tabs button.selected{background:#3d627b;color:white;border-color:#658da6}.keypad-tip{margin-left:auto;color:#8da4b9;font-size:10px;white-space:nowrap}
+.key-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;min-height:0}.key-grid[hidden]{display:none}
+.key-grid button{touch-action:manipulation;min-width:0;min-height:39px;border-radius:9px;border:1px solid #3d5269;background:#293c53;color:#f2f6ff;font-size:19px;font-weight:700;line-height:1.1;padding:3px 0;box-shadow:inset 0 -2px 0 #121c2b;outline-offset:2px}
+.key-grid button:active{background:#537b9a;transform:translateY(1px)}
+.key-grid .key-operator{background:#335a70;border-color:#4b7994;color:#e4fcff}.key-grid .key-function{background:#34435c;border-color:#4b5879;font-size:16px}.key-grid .key-variable{color:#72f0d3;background:#184448}.key-grid .key-edit{color:#fbc8b7;background:#4d364b;border-color:#77536e;font-size:16px}
+.stage-tools{display:flex;align-items:center;gap:7px}#stageSelect{max-width:125px;min-width:104px;border:1px solid #486179;border-radius:8px;background:#1b304a;color:#d9e9fa;font-size:11px;padding:5px;outline:0}
+.obstacle-color{color:#ff7899}.gate-color{color:#ae9bff}
+.editor-footer{padding-bottom:calc(8px + env(safe-area-inset-bottom))}.editor-head{padding-top:10px;padding-bottom:7px}.status{min-height:23px}
+@media(max-width:760px){
+  #app{padding-top:env(safe-area-inset-top)}.editor{height:min(56dvh,455px);max-height:calc(100% - 175px);flex:0 0 auto;overflow:hidden}.board{min-height:175px}
+  .editor-head{display:none}.expressions{flex:1 1 67px;max-height:94px;padding:5px 9px;min-height:46px}.expr-row{min-height:44px;margin-bottom:4px}.expr-input{font-size:16px;padding:7px 0}
+  .editor-footer{padding:5px 9px calc(5px + env(safe-area-inset-bottom))}.minirow{margin-bottom:4px}.minirow button{padding:5px 7px}.keypad-tabs button{padding:5px 10px}
+  .key-grid{gap:4px}.key-grid button{min-height:37px;font-size:19px}.key-grid .key-function{font-size:15px}.key-grid .key-edit{font-size:15px}
+  .actions button{padding:9px 5px;font-size:12px}.actions{margin-top:5px}.status{font-size:10px;min-height:18px;margin-top:4px;line-height:1.2;max-height:27px}
+  .legend{font-size:9px;gap:3px}.board-top{gap:5px}.board-top p{font-size:10px}
+}
+@media(max-width:760px) and (max-height:760px){
+ .editor{height:min(58dvh,410px);max-height:calc(100% - 160px)}.board{min-height:160px}
+ .key-grid button{min-height:31px;font-size:17px}.key-grid .key-function{font-size:13px}
+ .key-grid{gap:3px}.keypad{gap:2px}.keypad-tabs button{padding:3px 10px}.editor-footer{padding-top:3px;padding-bottom:calc(3px + env(safe-area-inset-bottom))}
+ .actions button{padding:7px 4px}.status{max-height:23px}
+ .expressions{max-height:70px}.expr-note{display:none}.expr-row{min-height:37px}.minirow{margin-bottom:2px}
+}
+@media(max-width:760px) and (max-height:570px){
+ .editor{height:min(60dvh,330px);max-height:calc(100% - 125px)}.board{min-height:125px}.key-grid button{min-height:27px}.keypad-tip,.status{display:none}.expressions{max-height:47px}.minirow .tiny{display:none}
+}
 </style>
 </head>
 <body>
 <div id="app">
  <header>
-  <div><div class="heading">MATH × PATHFINDING</div><div class="brand">GRAPH <b>RUNNER</b><span class="tiny"> 2.0</span></div></div>
-  <div class="stage-info"><small id="stageCount">STAGE 01 / 03</small><span id="stageTitle">山を越えろ</span></div>
+  <div><div class="heading">MATH × PATHFINDING</div><div class="brand">GRAPH <b>RUNNER</b><span class="tiny"> 3.0</span></div></div>
+  <div class="stage-info"><small id="stageCount">STAGE 01 / 12</small><span id="stageTitle">山を越えろ</span></div>
  </header>
  <div class="workspace">
   <section class="board" aria-label="グラフ">
-   <div class="board-top"><p id="mission">式を入力して障害物を避けよう</p><strong>START (0, 0) → GOAL (8, 0)</strong></div>
+   <div class="board-top"><p id="mission">式を入力して障害物を避けよう</p><select id="stageSelect" aria-label="ステージを選択"></select></div>
    <div class="graph-frame" id="frame"><canvas id="canvas" role="img" aria-label="関数のグラフ、障害物、スタートとゴール"></canvas><span class="graph-label">GRAPH PAPER</span></div>
-   <div class="legend"><span><b>●</b> スタート：原点</span><span><em>◆</em> ゴール：(8,0)</span><span>■ 障害物</span></div>
+   <div class="legend"><span><b>●</b> (0,0) → <em>◆</em> (8,0)</span><span><span class="obstacle-color">■</span> 障害物　<span class="gate-color">◎</span> 通過ゲート</span></div>
   </section>
   <aside class="editor" aria-label="関数エディター">
-   <div class="editor-head"><h2>関数を描こう</h2><p>Desmos風の複数式エディター。色の丸で表示・非表示を切替。式をタップすると、その線を走る。</p></div>
+   <div class="editor-head"><h2>関数を描こう</h2><p>下の数式ボタンだけで入力できる。式をタップすると、その線を走る。</p></div>
    <div class="expressions" id="expressions" aria-label="入力した関数"></div>
    <div class="editor-footer">
     <div class="minirow"><button id="add">＋ 式を追加</button><span class="tiny" id="pathName">走行コース：式1</span><button class="hint" id="hint">ヒント</button></div>
-    <div class="mathkeys" aria-label="数学入力キー"><button data-ins="x">x</button><button data-ins="^2">x²</button><button data-ins="^3">x³</button><button data-ins="(">(</button><button data-ins=")">)</button><button data-ins="sin(">sin</button><button data-ins="cos(">cos</button><button data-ins="sqrt(">√</button><button data-ins="pi">π</button><button data-ins="/">÷</button><button data-ins="*">×</button><button data-ins="-">−</button></div>
+    <div class="keypad" id="keypad" aria-label="数式入力用タッチキーボード">
+      <div class="keypad-tabs"><button data-tab="main" class="selected" aria-pressed="true">数字・演算</button><button data-tab="func" aria-pressed="false">関数・記号</button><span class="keypad-tip">ボタンだけで入力</span></div>
+      <div class="key-grid" data-panel="main">
+        <button data-ins="x" class="key-variable">x</button><button data-ins="^2" class="key-function">x²</button><button data-insert="power" class="key-function">xⁿ</button><button data-ins="(" class="key-function">(</button><button data-ins=")" class="key-function">)</button>
+        <button data-ins="7">7</button><button data-ins="8">8</button><button data-ins="9">9</button><button data-ins="/" class="key-operator">÷</button><button data-key="back" class="key-edit" aria-label="一文字消去">⌫</button>
+        <button data-ins="4">4</button><button data-ins="5">5</button><button data-ins="6">6</button><button data-ins="*" class="key-operator">×</button><button data-key="left" class="key-edit" aria-label="カーソルを左へ">←</button>
+        <button data-ins="1">1</button><button data-ins="2">2</button><button data-ins="3">3</button><button data-ins="-" class="key-operator">−</button><button data-key="right" class="key-edit" aria-label="カーソルを右へ">→</button>
+        <button data-ins="0">0</button><button data-ins=".">.</button><button data-ins="pi" class="key-variable">π</button><button data-ins="+" class="key-operator">＋</button><button data-key="clear" class="key-edit">AC</button>
+      </div>
+      <div class="key-grid" data-panel="func" hidden>
+        <button data-insert="sin" class="key-function">sin</button><button data-insert="cos" class="key-function">cos</button><button data-insert="tan" class="key-function">tan</button><button data-insert="sqrt" class="key-function">√</button><button data-insert="abs" class="key-function">|x|</button>
+        <button data-insert="ln" class="key-function">ln</button><button data-insert="log" class="key-function">log</button><button data-insert="exp" class="key-function">exp</button><button data-ins="e" class="key-variable">e</button><button data-ins="pi" class="key-variable">π</button>
+        <button data-ins="^2" class="key-function">x²</button><button data-ins="^3" class="key-function">x³</button><button data-insert="power" class="key-function">xⁿ</button><button data-insert="fraction" class="key-function">a/b</button><button data-insert="inverse" class="key-function">1/x</button>
+        <button data-ins="(" class="key-function">(</button><button data-ins=")" class="key-function">)</button><button data-ins="*" class="key-operator">×</button><button data-ins="/" class="key-operator">÷</button><button data-key="back" class="key-edit" aria-label="一文字消去">⌫</button>
+      </div>
+    </div>
     <div class="actions"><button class="run" id="run">▶ 走らせる</button><button class="reset" id="reset">リセット</button><button class="next" id="next" disabled>次へ →</button></div>
-    <div class="status" id="status" role="status" aria-live="polite">式を変えるとグラフがリアルタイムで変化します。</div>
+    <div class="status" id="status" role="status" aria-live="polite">下のボタンで式を入力すると、グラフが更新されます。</div>
    </div>
   </aside>
  </div>
@@ -57,15 +101,26 @@ header{height:64px;flex:0 0 auto;display:flex;align-items:center;justify-content
 'use strict';
 // Independent of external CDNs, libraries, or accounts. Can be deployed as index.html on GitHub Pages.
 const STAGES=[
- {title:'山を越えろ',mission:'中央の壁を上から越えよう',hint:'原点と (8,0) を通る放物線を考えよう。例：x(8-x)/8',solution:'x*(8-x)/8',obstacles:[{x:3.2,y:-4.0,w:1.6,h:4.8}]},
- {title:'谷をくぐれ',mission:'今度は壁の下をくぐろう',hint:'下にふくらむ放物線を試そう。例：-x(8-x)/8',solution:'-x*(8-x)/8',obstacles:[{x:3.2,y:-0.8,w:1.6,h:4.8}]},
- {title:'S字の迷路',mission:'前半は上、後半は下を通ろう',hint:'3次関数を使って符号を変えよう。例：-0.07x(x-4)(8-x)',solution:'-0.07*x*(x-4)*(8-x)',obstacles:[{x:1.35,y:-4,w:1.3,h:4.6},{x:5.35,y:-0.6,w:1.3,h:4.6}]}
+ {title:'山を越えろ',mission:'壁の上を通る放物線をつくろう',hint:'x(8−x) は両端で0になり、中央で正になります。',solution:'x*(8-x)/8',difficulty:1,obstacles:[{x:3.2,y:-3.5,w:1.6,h:4.8}],gates:[]},
+ {title:'谷をくぐれ',mission:'今度は壁の下を通り抜けよう',hint:'前の放物線にマイナスをつけたら？',solution:'-x*(8-x)/8',difficulty:1,obstacles:[{x:3.2,y:-0.8,w:1.6,h:4.3}],gates:[]},
+ {title:'S字の迷路',mission:'前半で上、後半で下を通ろう',hint:'x、(x−4)、(8−x) を掛けると符号が切り替わります。',solution:'-0.07*x*(x-4)*(8-x)',difficulty:2,obstacles:[{x:1.35,y:-3.5,w:1.3,h:4.1},{x:5.35,y:-0.6,w:1.3,h:4.1}],gates:[]},
+ {title:'細いトンネル',mission:'上下の障害物の間を抜けよう',hint:'頂点が約 (4,2) の放物線をつくろう。',solution:'x*(8-x)/8',difficulty:2,obstacles:[{x:3.45,y:-3.5,w:1.1,h:5.15},{x:3.45,y:2.43,w:1.1,h:1.07}],gates:[{x:4,y:2,r:.33}]},
+ {title:'ふたつの門',mission:'指定された2つの紫の輪を通ろう',hint:'x=4 で符号が入れ替わる3次式を考えよう。',solution:'-0.07*x*(x-4)*(8-x)',difficulty:3,obstacles:[{x:1.5,y:-3.5,w:1,h:4.15},{x:5.5,y:-0.65,w:1,h:4.15}],gates:[{x:2,y:1.68,r:.36},{x:6,y:-1.68,r:.36}]},
+ {title:'正弦の波',mission:'波の山と谷を順番に通過しよう',hint:'sin(πx/4) を使うと x=0,4,8 で0になります。',solution:'1.7*sin(pi*x/4)',difficulty:3,obstacles:[{x:1.5,y:-3.5,w:1,h:4.5},{x:5.5,y:-1,w:1,h:4.5}],gates:[{x:2,y:1.7,r:.33},{x:6,y:-1.7,r:.33}]},
+ {title:'ふたこぶの山',mission:'山・谷・山を一つの式で描こう',hint:'abs(x−4) を掛けて、中央で0になる形を考えよう。',solution:'0.07*x*(8-x)*abs(x-4)',difficulty:4,obstacles:[{x:1.5,y:-3.5,w:1,h:4.35},{x:3.75,y:.8,w:.5,h:2.7},{x:5.5,y:-3.5,w:1,h:4.35}],gates:[{x:2,y:1.68,r:.34},{x:4,y:0,r:.28},{x:6,y:1.68,r:.34}]},
+ {title:'非対称の三次式',mission:'左は低めに上昇、右は深く潜ろう',hint:'x=3 と x=8 を根に含む3次式を試そう。',solution:'0.06*x*(x-3)*(x-8)',difficulty:4,obstacles:[{x:1.75,y:-3.5,w:.5,h:3.55},{x:4.5,y:-.62,w:1,h:4.12}],gates:[{x:2,y:.72,r:.30},{x:5,y:-1.8,r:.36}]},
+ {title:'四重の波',mission:'4つのゲートを上下交互に通過しよう',hint:'sin(πx/2) の周期を利用しよう。',solution:'1.6*sin(pi*x/2)',difficulty:5,obstacles:[{x:.72,y:-3.5,w:.56,h:4.15},{x:2.72,y:-.65,w:.56,h:4.15},{x:4.72,y:-3.5,w:.56,h:4.15},{x:6.72,y:-.65,w:.56,h:4.15}],gates:[{x:1,y:1.6,r:.29},{x:3,y:-1.6,r:.29},{x:5,y:1.6,r:.29},{x:7,y:-1.6,r:.29}]},
+ {title:'根号の抜け道',mission:'両端は低く、中央は高い曲線をつくろう',hint:'√(x(8−x)) は両端で0になります。',solution:'0.62*sqrt(x*(8-x))',difficulty:5,obstacles:[{x:3.55,y:-3.5,w:.9,h:5.4},{x:3.55,y:2.89,w:.9,h:.61}],gates:[{x:1,y:1.6405,r:.25},{x:4,y:2.48,r:.28},{x:7,y:1.6405,r:.25}]},
+ {title:'合成した波',mission:'左右で高さが違う4つのゲートを通ろう',hint:'周期の違う2種類のsinを足すと形を調整できます。',solution:'1.1*sin(pi*x/2)+0.55*sin(pi*x/4)',difficulty:6,obstacles:[{x:.76,y:-3.5,w:.5,h:4.15},{x:2.76,y:-.04,w:.5,h:3.54},{x:4.76,y:-3.5,w:.5,h:3.54},{x:6.76,y:-.65,w:.5,h:4.15}],gates:[{x:1,y:1.4889,r:.27},{x:3,y:-.7111,r:.27},{x:5,y:.7111,r:.27},{x:7,y:-1.4889,r:.27}]},
+ {title:'FINAL：関数の迷宮',mission:'最後の6つのゲート。複数の周期を組み合わせよう',hint:'sin(πx/2) と sin(3πx/4) を重ねてみよう。',solution:'1.1*sin(pi*x/2)+0.8*sin(3*pi*x/4)',difficulty:7,obstacles:[{x:.88,y:-3.5,w:.24,h:3.9},{x:1.88,y:0,w:.24,h:3.5},{x:2.88,y:-.05,w:.24,h:3.55},{x:4.88,y:-3.5,w:.24,h:3.55},{x:5.88,y:-3.5,w:.24,h:3.55},{x:6.88,y:-.4,w:.24,h:3.9}],gates:[{x:1,y:1.6657,r:.26},{x:2,y:-.8,r:.24},{x:3,y:-.5343,r:.26},{x:5,y:.5343,r:.26},{x:6,y:.8,r:.24},{x:7,y:-1.6657,r:.26}]}
 ];
 const COLORS=['#66e6d1','#ffbd6a','#a48aff','#80b4ff'];
 const $=s=>document.querySelector(s);
 const canvas=$('#canvas'),ctx=canvas.getContext('2d');
 const world={xmin:-1.2,xmax:9.2,ymin:-3.5,ymax:3.5};
-let stage=0,expressions=[],nextId=1,activeId=null,riderX=0,playing=false,finished=false,crashed=false,frame=0,lastTime=0,trail=[],cw=1,ch=1,ratio=1;
+let stage=0,expressions=[],nextId=1,activeId=null,riderX=0,playing=false,finished=false,crashed=false,frame=0,lastTime=0,trail=[],cw=1,ch=1,ratio=1,gateIndex=0;
+let unlocked=1;try{unlocked=clampUnlock(Number(localStorage.getItem("graphRunnerUnlocked")||1))}catch{}
+function clampUnlock(n){return Number.isFinite(n)?Math.max(1,Math.min(STAGES.length,Math.floor(n))):1}
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const XP=x=>(x-world.xmin)/(world.xmax-world.xmin)*cw;
 const YP=y=>(world.ymax-y)/(world.ymax-world.ymin)*ch;
@@ -115,17 +170,18 @@ function pathCheck(fn,st=STAGES[stage]){
   if(!Number.isFinite(y)||y<world.ymin+.12||y>world.ymax-.12)return {ok:false,reason:'コースが画面外に出るか定義されない点があります。',x:xx};
   for(const o of st.obstacles)if(collision(xx,y,o))return {ok:false,reason:'障害物に衝突します。',x:xx};
  }
+ for(const [i,g] of (st.gates||[]).entries()){let y=safe(fn,g.x);if(!Number.isFinite(y)||Math.abs(y-g.y)>g.r)return {ok:false,reason:'ゲート'+(i+1)+'を通れません。',x:g.x}}
  return {ok:true};
 }
 function putStatus(msg,type=''){const el=$('#status');el.textContent=msg;el.className='status '+type}
 function activeExpr(){return expressions.find(e=>e.id===activeId)||expressions[0]}
 function updateFns(){for(let e of expressions){try{e.fn=parseFunction(e.text);e.error=''}catch(err){e.fn=null;e.error=err.message}}}
 function newExpr(text='',select=true){if(expressions.length>=4){putStatus('式は最大4本までです。','bad');return}const id=nextId++;expressions.push({id,text,visible:true,fn:null,error:'',color:COLORS[(id-1)%COLORS.length]});if(select)activeId=id;updateFns();renderRows();draw()}
-function resetMotion(quiet=false){cancelAnimationFrame(frame);playing=finished=crashed=false;riderX=0;trail=[];lastTime=0;$('#run').disabled=false;$('#run').textContent='▶ 走らせる';$('#next').disabled=true;if(!quiet)putStatus('式を調整して、もう一度挑戦しよう。');draw()}
+function resetMotion(quiet=false){cancelAnimationFrame(frame);playing=finished=crashed=false;riderX=0;gateIndex=0;trail=[];lastTime=0;$('#run').disabled=false;$('#run').textContent='▶ 走らせる';$('#next').disabled=true;if(!quiet)putStatus('式を調整して、もう一度挑戦しよう。');draw()}
 function renderRows(focusId){const panel=$('#expressions');panel.innerHTML='';for(let ix=0;ix<expressions.length;ix++){const e=expressions[ix];const row=document.createElement('div');row.className='expr-row'+(activeId===e.id?' active':'');row.style.setProperty('--c',e.color);
   const toggle=document.createElement('button');toggle.className='color-toggle'+(e.visible?'':' hidden');toggle.setAttribute('aria-label',e.visible?'グラフを非表示':'グラフを表示');toggle.title='表示/非表示';toggle.addEventListener('click',()=>{e.visible=!e.visible;renderRows();draw()});
   const middle=document.createElement('div');middle.style.minWidth='0';const line=document.createElement('div');line.className='expr-main';const prefix=document.createElement('span');prefix.className='math-prefix';prefix.textContent='y =';
-  const input=document.createElement('input');input.className='expr-input';input.type='text';input.setAttribute('autocapitalize','off');input.setAttribute('autocomplete','off');input.spellcheck=false;input.value=e.text;input.placeholder='式を入力';input.dataset.exprId=e.id;input.setAttribute('aria-label','式'+(ix+1));
+  const input=document.createElement('input');input.className='expr-input';input.type='text';input.setAttribute('autocapitalize','off');input.setAttribute('autocomplete','off');input.spellcheck=false;input.readOnly=window.matchMedia('(max-width:760px)').matches;input.inputMode='none';input.value=e.text;input.placeholder='式を入力';input.dataset.exprId=e.id;input.setAttribute('aria-label','式'+(ix+1));
   input.addEventListener('focus',()=>{activeId=e.id;updateActiveRows();});
   input.addEventListener('input',()=>{e.text=input.value;resetMotion(true);updateFns();updateNotes();draw()});
   input.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();input.blur();run()}});
@@ -138,7 +194,8 @@ function renderRows(focusId){const panel=$('#expressions');panel.innerHTML='';fo
 }
 function updateActiveRows(){for(const row of $('#expressions').children){const input=row.querySelector('.expr-input');row.classList.toggle('active',Number(input.dataset.exprId)===activeId)}const ix=expressions.findIndex(e=>e.id===activeId);$('#pathName').textContent=`走行コース：式${ix+1}`}
 function updateNotes(){for(const e of expressions){const note=document.querySelector(`[data-note-id="${e.id}"]`);if(!note)continue;note.className='expr-note'+(e.error?' error':'');note.textContent=e.error||((e.id===activeId?'● 走る線':'タップで走行コースに選択')+(e.visible?'':' ／ 非表示'))}}
-function loadStage(i){stage=i;expressions=[];activeId=null;nextId=1;resetMotion(true);$('#stageCount').textContent=`STAGE ${String(i+1).padStart(2,'0')} / 03`;$('#stageTitle').textContent=STAGES[i].title;$('#mission').textContent=STAGES[i].mission;newExpr('0');putStatus('原点からスタート。式を編集するとすぐグラフが変わります。');draw()}
+function refreshStagePicker(){let select=$('#stageSelect'),prev=select.value;select.innerHTML='';STAGES.forEach((item,i)=>{const o=document.createElement('option');o.value=String(i);o.disabled=i>=unlocked;o.textContent=(i>=unlocked?'🔒 ':'')+String(i+1).padStart(2,'0')+' '+item.title;select.append(o)});select.value=String(stage)}
+function loadStage(i){if(i>=unlocked||i<0||i>=STAGES.length)return;stage=i;expressions=[];activeId=null;nextId=1;resetMotion(true);$('#stageCount').textContent=`STAGE ${String(i+1).padStart(2,'0')} / ${STAGES.length}　難度 ${STAGES[i].difficulty}`;$('#stageTitle').textContent=STAGES[i].title;$('#mission').textContent=STAGES[i].mission;refreshStagePicker();newExpr('');putStatus('下のボタンで式をつくって、▶ 走らせよう。');draw()}
 function draw(){if(!ctx||cw<2||ch<2)return;ctx.clearRect(0,0,cw,ch);ctx.fillStyle='#0d1c30';ctx.fillRect(0,0,cw,ch);
  const gradient=ctx.createLinearGradient(0,0,cw,ch);gradient.addColorStop(0,'#102b42');gradient.addColorStop(1,'#081a2c');ctx.fillStyle=gradient;ctx.fillRect(0,0,cw,ch);
  ctx.lineWidth=1;for(let x=-1;x<=9;x++){ctx.beginPath();ctx.moveTo(XP(x),0);ctx.lineTo(XP(x),ch);ctx.strokeStyle=x===0?'#8199bc':'#54718d40';ctx.lineWidth=x===0?1.7:1;ctx.stroke()}
@@ -147,6 +204,9 @@ function draw(){if(!ctx||cw<2||ch<2)return;ctx.clearRect(0,0,cw,ch);ctx.fillStyl
  ctx.textAlign='right';ctx.textBaseline='middle';for(let y=-3;y<=3;y++){if(y!==0)ctx.fillText(y,XP(0)-6,YP(y))}
  ctx.textAlign='center';ctx.fillStyle='#d5e6f3';ctx.font='italic 16px Georgia';ctx.fillText('x',cw-11,YP(0)-15);ctx.fillText('y',XP(0)+16,14);
  for(const o of STAGES[stage].obstacles){let px=XP(o.x),py=YP(o.y+o.h),w=SW(o.w),h=SH(o.h);ctx.fillStyle='#bc45616e';ctx.fillRect(px,py,w,h);ctx.strokeStyle='#ff8ca5';ctx.lineWidth=1.7;ctx.strokeRect(px,py,w,h);ctx.save();ctx.beginPath();ctx.rect(px,py,w,h);ctx.clip();ctx.strokeStyle='#ef7d9c55';ctx.lineWidth=1;for(let s=-h;s<w+h;s+=14){ctx.beginPath();ctx.moveTo(px+s,py+h);ctx.lineTo(px+s+h,py);ctx.stroke()}ctx.restore()}
+ for(const [i,g] of (STAGES[stage].gates||[]).entries()){
+  const px=XP(g.x),py=YP(g.y),radius=Math.max(7,SH(g.r));ctx.save();ctx.strokeStyle=(i<gateIndex)?'#70e7ca':'#b5a1ff';ctx.fillStyle=(i<gateIndex)?'#70e7ca22':'#b5a1ff1d';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(px,py,5.5,radius,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.textAlign='center';ctx.font='bold 10px system-ui';ctx.fillStyle='#dbcfff';ctx.fillText(''+(i+1),px,py-radius-7);ctx.restore();
+ }
  for(const e of expressions){if(!e.visible||!e.fn)continue;ctx.save();ctx.beginPath();ctx.rect(0,0,cw,ch);ctx.clip();ctx.beginPath();let prev=null;
   for(let n=0;n<=1400;n++){let x=world.xmin+(world.xmax-world.xmin)*n/1400,y=safe(e.fn,x);if(!Number.isFinite(y)||Math.abs(y)>500){prev=null;continue}let px=XP(x),py=YP(y);if(prev&&Math.abs(prev.y-y)<.45)ctx.lineTo(px,py);else ctx.moveTo(px,py);prev={y}}
   ctx.strokeStyle=e.color;ctx.lineWidth=e.id===activeId?3.4:2.1;ctx.globalAlpha=e.id===activeId?1:.55;ctx.lineJoin='round';ctx.stroke();ctx.restore()}
@@ -169,21 +229,38 @@ function tick(now){if(!playing)return;let dt=lastTime?Math.min((now-lastTime)/10
  while(riderX+1e-7<target){riderX=Math.min(target,riderX+.018);let y=safe(fn,riderX);
   if(!Number.isFinite(y)||y<world.ymin+.12||y>world.ymax-.12){stop(false,'コースアウト！ x≈'+riderX.toFixed(2));return}
   if(STAGES[stage].obstacles.some(o=>collision(riderX,y,o))){stop(false,'障害物に当たった！ x≈'+riderX.toFixed(2));return}
+  const gate=STAGES[stage].gates?.[gateIndex];if(gate&&riderX>=gate.x){let gy=safe(fn,gate.x);if(!Number.isFinite(gy)||Math.abs(gy-gate.y)>gate.r){stop(false,'ゲート'+(gateIndex+1)+'を通れなかった！');return}gateIndex++}
   trail.push([riderX,y]);
  }
- draw();if(riderX>=8-1e-6){stop(true,stage===2?'全3ステージクリア！':'ステージクリア！ 次のステージへ');return}
+ draw();if(riderX>=8-1e-6){stop(true,stage===STAGES.length-1?'全12ステージクリア！':'クリア！ 次のステージが開放されました。');return}
  frame=requestAnimationFrame(tick)
 }
-function stop(success,msg){playing=false;finished=success;crashed=!success;$('#run').disabled=false;$('#run').textContent=success?'✓ もう一度走る':'↻ 再挑戦';$('#next').disabled=!(success&&stage<STAGES.length-1);putStatus(msg,success?'good':'bad');draw()}
-function insertText(s){let input=document.querySelector(`.expr-input[data-expr-id="${activeId}"]`);if(!input)return;let a=input.selectionStart??input.value.length,b=input.selectionEnd??a;input.value=input.value.slice(0,a)+s+input.value.slice(b);input.focus({preventScroll:true});input.setSelectionRange(a+s.length,a+s.length);input.dispatchEvent(new Event('input',{bubbles:true}))}
-function updateVisibleViewport(){const v=window.visualViewport;const height=v?v.height:window.innerHeight,top=v?v.offsetTop:0;document.documentElement.style.setProperty('--vvh',height+'px');document.documentElement.style.setProperty('--vtop',top+'px');let baseline=window.__baseHeight||(window.__baseHeight=window.innerHeight);let focus=document.activeElement?.classList.contains('expr-input');const keyboard=focus&&window.matchMedia('(max-width:760px)').matches;$('#app').classList.toggle('keyboard-open',keyboard);if(!focus&&height>baseline-40)window.__baseHeight=Math.max(baseline,height);requestAnimationFrame(resizeCanvas)}
+function stop(success,msg){playing=false;finished=success;crashed=!success;if(success&&unlocked<stage+2){unlocked=clampUnlock(stage+2);try{localStorage.setItem('graphRunnerUnlocked',String(unlocked))}catch{}refreshStagePicker()}$('#run').disabled=false;$('#run').textContent=success?'✓ もう一度走る':'↻ 再挑戦';$('#next').disabled=!(success&&stage<STAGES.length-1);putStatus(msg,success?'good':'bad');draw()}
+function selectedInput(){return document.querySelector(`.expr-input[data-expr-id="${activeId}"]`)}
+function commitInput(input,text,pos){const e=activeExpr();if(!e||!input)return;input.value=text;e.text=text;input.dispatchEvent(new Event('input',{bubbles:true}));input.focus({preventScroll:true});pos=clamp(pos,0,text.length);input.setSelectionRange(pos,pos)}
+function replaceSelection(insert,caretOffset=insert.length){const input=selectedInput();if(!input)return;const a=input.selectionStart??input.value.length,b=input.selectionEnd??a;commitInput(input,input.value.slice(0,a)+insert+input.value.slice(b),a+caretOffset)}
+function inputCommand(cmd){const input=selectedInput();if(!input)return;let a=input.selectionStart??input.value.length,b=input.selectionEnd??a,v=input.value;
+ if(cmd==='clear'){commitInput(input,'',0);return}
+ if(cmd==='back'){if(a===b&&a>0)a--;commitInput(input,v.slice(0,a)+v.slice(b),a);return}
+ if(cmd==='left'){const p=a===b?Math.max(0,a-1):a;input.focus({preventScroll:true});input.setSelectionRange(p,p);return}
+ if(cmd==='right'){let p=a===b?Math.min(v.length,a+1):b;if(v.slice(p-1,p+2)===')/(')p=Math.min(v.length,p+2);input.focus({preventScroll:true});input.setSelectionRange(p,p);return}
+}
+function insertTemplate(kind){const input=selectedInput();if(!input)return;const a=input.selectionStart??input.value.length,b=input.selectionEnd??a,selected=input.value.slice(a,b);
+ if(kind==='power'){replaceSelection('^()',2);return}
+ if(kind==='fraction'){if(selected){replaceSelection('('+selected+')/()',selected.length+4)}else replaceSelection('()/()',1);return}
+ if(kind==='inverse'){replaceSelection('1/('+selected+')',selected?selected.length+3:3);return}
+ const text=kind+'('+selected+')';replaceSelection(text,selected?text.length:kind.length+1)
+}
+function updateVisibleViewport(){const v=window.visualViewport;const height=v?v.height:window.innerHeight,top=v?v.offsetTop:0;document.documentElement.style.setProperty('--vvh',height+'px');document.documentElement.style.setProperty('--vtop',top+'px');const mobile=window.matchMedia('(max-width:760px)').matches;document.querySelectorAll('.expr-input').forEach(el=>{el.readOnly=mobile;el.inputMode=mobile?'none':'text'});$('#app').classList.remove('keyboard-open');requestAnimationFrame(resizeCanvas)}
 function resizeCanvas(){const box=canvas.getBoundingClientRect();if(!box.width||!box.height)return;const dpr=Math.min(2,window.devicePixelRatio||1);cw=box.width;ch=box.height;const pw=Math.round(cw*dpr),ph=Math.round(ch*dpr);if(canvas.width!==pw||canvas.height!==ph){canvas.width=pw;canvas.height=ph}ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
 $('#add').addEventListener('click',()=>{newExpr('');updateActiveRows()});
 $('#hint').addEventListener('click',()=>putStatus(STAGES[stage].hint));
 $('#run').addEventListener('click',run);
 $('#reset').addEventListener('click',()=>resetMotion());
 $('#next').addEventListener('click',()=>{if(finished&&stage<STAGES.length-1)loadStage(stage+1)});
-for(const btn of document.querySelectorAll('[data-ins]')){btn.addEventListener('mousedown',e=>e.preventDefault());btn.addEventListener('click',()=>insertText(btn.dataset.ins))}
+$('#stageSelect').addEventListener('change',e=>loadStage(Number(e.target.value)));
+for(const btn of document.querySelectorAll('[data-tab]'))btn.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(b=>{let active=b===btn;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active))});document.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==btn.dataset.tab)});
+for(const btn of document.querySelectorAll('[data-ins],[data-key],[data-insert]')){btn.addEventListener('pointerdown',e=>e.preventDefault());btn.addEventListener('click',()=>{if(btn.dataset.ins!==undefined)replaceSelection(btn.dataset.ins);else if(btn.dataset.key)inputCommand(btn.dataset.key);else insertTemplate(btn.dataset.insert)})}
 window.addEventListener('resize',updateVisibleViewport);
 window.visualViewport?.addEventListener('resize',updateVisibleViewport);
 window.visualViewport?.addEventListener('scroll',updateVisibleViewport);
@@ -191,7 +268,7 @@ document.addEventListener('focusin',()=>setTimeout(updateVisibleViewport,70));
 document.addEventListener('focusout',()=>setTimeout(updateVisibleViewport,140));
 window.addEventListener('orientationchange',()=>setTimeout(updateVisibleViewport,200));
 new ResizeObserver(()=>resizeCanvas()).observe($('#frame'));
-window.GRAPH_RUNNER_TEST={STAGES,parseFunction,pathCheck,collision};
+window.GRAPH_RUNNER_TEST={STAGES,parseFunction,pathCheck,collision,loadStage,replaceSelection,inputCommand,insertTemplate};
 loadStage(0);updateVisibleViewport();resizeCanvas();
 </script>
 </body>
