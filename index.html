@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#0a1527">
-<title>GRAPH RUNNER 4 | 数式でルートをつくる</title>
+<title>GRAPH RUNNER 5 | 数式でルートをつくる</title>
 <style>
 :root{color-scheme:dark;--bg:#091426;--ink:#e9f1ff;--sub:#9badc5;--border:#283c56;--panel:#14243a;--field:#0c1b31;--green:#61e8cb;--gold:#ffc66a;--red:#ff7899}
 *{box-sizing:border-box}
@@ -56,17 +56,31 @@ header{height:64px;flex:0 0 auto;display:flex;align-items:center;justify-content
 @media(max-width:760px) and (max-height:570px){
  .editor{height:min(60dvh,330px);max-height:calc(100% - 125px)}.board{min-height:125px}.key-grid button{min-height:27px}.keypad-tip,.status{display:none}.expressions{max-height:47px}.minirow .tiny{display:none}
 }
+
+/* Stage selection modal: accessible, full-height scrollable on iPhone. */
+.stage-open{flex:0 0 auto;color:#072b33;background:var(--green);border:0;border-radius:9px;padding:7px 10px;font-size:12px;font-weight:800;white-space:nowrap}.stage-open span{display:inline-block;margin-left:4px;font-size:11px;opacity:.8}
+.stage-overlay[hidden]{display:none!important}.stage-overlay{position:fixed;inset:0;z-index:30;background:#020b17db;display:flex;justify-content:center;align-items:center;padding:16px;box-sizing:border-box}
+.stage-sheet{width:min(860px,100%);max-height:100%;background:#112238;border:1px solid #42617d;border-radius:20px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 14px 80px #0009;min-height:0}
+.stage-sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:19px 20px 12px;border-bottom:1px solid #2b4361}.stage-sheet-head h2{font-size:22px;margin:3px 0 6px}.stage-sheet-head p{font-size:12px;color:var(--sub);margin:0;line-height:1.5}.close-stages{background:#29435c;color:#e5f3ff;border:0;border-radius:10px;width:37px;height:37px;font-size:26px}
+.stage-progress{padding:12px 20px 5px;color:#c6daec;font-size:12px}.stage-progress strong{color:var(--green);font-size:17px}.progress-bar{background:#263e55;height:7px;border-radius:20px;overflow:hidden;margin:10px 0}.progress-bar>div{width:0;height:100%;background:var(--green);transition:width .2s}
+.stage-cards{overflow-y:auto;overscroll-behavior:contain;min-height:0;flex:1;padding:11px 20px 24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-content:start}
+.stage-card{display:flex;align-items:stretch;min-width:0;border:1px solid #37516f;background:#182e47;border-radius:13px;overflow:hidden;min-height:90px}.stage-card.current{border-color:var(--gold);box-shadow:inset 0 0 0 1px #d39a45}.stage-card.played{background:#133d42;border-color:#3e867e}
+.stage-choice{min-width:0;flex:1;text-align:left;border:0;color:#edf7ff;background:transparent;padding:11px 8px 11px 12px}.stage-choice .stage-index{font-size:11px;color:#b4c9dc}.stage-choice .stage-title{font-weight:750;font-size:13px;margin:6px 0;line-height:1.3;overflow-wrap:anywhere}.stage-choice .stage-level{font-size:10px;color:#a3bbd1}
+.stage-check{display:flex;align-items:center;justify-content:center;flex:0 0 43px;background:#09192a40;border:0;border-left:1px solid #355169;color:#abc1d4;font-size:23px}.stage-check[aria-pressed="true"]{color:var(--green);font-weight:900}.stage-choice:focus-visible,.stage-check:focus-visible,.close-stages:focus-visible,.stage-open:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+.stage-sheet-foot{border-top:1px solid #35506b;padding:12px 20px;display:flex;justify-content:space-between;gap:15px;align-items:center;color:#abc0d4;font-size:11px}.stage-sheet-foot button{border:0;background:#294963;border-radius:9px;color:#e7f5ff;padding:9px 12px;white-space:nowrap}
+@media(max-width:760px){.stage-overlay{padding:0;align-items:stretch}.stage-sheet{height:100%;max-height:100%;border:0;border-radius:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}.stage-sheet-head{padding:13px 14px 10px}.stage-sheet-head h2{font-size:20px}.stage-progress{padding:10px 14px 4px}.stage-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:9px 12px 16px}.stage-card{min-height:90px}.stage-choice{padding:9px}.stage-check{flex-basis:37px}.stage-sheet-foot{padding:9px 13px}.stage-sheet-foot span{display:none}.stage-sheet-foot button{width:100%}.stage-open{font-size:11px;padding:6px 8px}}
+@media(max-width:360px){.stage-cards{grid-template-columns:1fr}.stage-card{min-height:66px}}
 </style>
 </head>
 <body>
 <div id="app">
  <header>
-  <div><div class="heading">MATH × PATHFINDING</div><div class="brand">GRAPH <b>RUNNER</b><span class="tiny"> 3.0</span></div></div>
-  <div class="stage-info"><small id="stageCount">STAGE 01 / 12</small><span id="stageTitle">山を越えろ</span></div>
+  <div><div class="heading">MATH × PATHFINDING</div><div class="brand">GRAPH <b>RUNNER</b><span class="tiny"> 5.0</span></div></div>
+  <div class="stage-info"><small id="stageCount">STAGE 01 / 36</small><span id="stageTitle">山を越えろ</span></div>
  </header>
  <div class="workspace">
   <section class="board" aria-label="グラフ">
-   <div class="board-top"><p id="mission">式を入力して障害物を避けよう</p><select id="stageSelect" aria-label="ステージを選択"></select></div>
+   <div class="board-top"><p id="mission">式を入力して障害物を避けよう</p><button id="showStages" class="stage-open" type="button">☷ ステージ一覧 <span id="progressCompact">0/36</span></button><select id="stageSelect" aria-label="ステージを選択" hidden></select></div>
    <div class="graph-frame" id="frame"><canvas id="canvas" role="img" aria-label="関数のグラフ、障害物、スタートとゴール"></canvas><span class="graph-label">GRAPH PAPER</span></div>
    <div class="legend"><span><b>●</b> (0,0) → <em>◆</em> (8,0)</span><span><span class="obstacle-color">■</span> 障害物　<span class="gate-color">◎</span> 通過ゲート</span></div>
   </section>
@@ -97,6 +111,14 @@ header{height:64px;flex:0 0 auto;display:flex;align-items:center;justify-content
   </aside>
  </div>
 </div>
+<section id="stageOverlay" class="stage-overlay" hidden aria-labelledby="stageOverlayTitle" role="dialog" aria-modal="true">
+ <div class="stage-sheet">
+  <div class="stage-sheet-head"><div><div class="heading">CHOOSE YOUR CHALLENGE</div><h2 id="stageOverlayTitle">ステージ一覧</h2><p>好きなステージからプレイできます。チェックはクリア時に自動記録されます。</p></div><button id="closeStages" class="close-stages" type="button" aria-label="一覧を閉じる">×</button></div>
+  <div class="stage-progress"><div><strong id="progressCount">0 / 36</strong> クリア済み</div><div class="progress-bar"><div id="progressBar"></div></div></div>
+  <div id="stageCards" class="stage-cards" aria-label="すべてのステージ"></div>
+  <div class="stage-sheet-foot"><span>ステージをタップすると移動します。チェックは自分で変更することもできます。</span><button id="closeStagesBottom" type="button">ゲームに戻る</button></div>
+ </div>
+</section>
 <script>
 'use strict';
 // Independent of external CDNs, libraries, or accounts. Can be deployed as index.html on GitHub Pages.
@@ -143,8 +165,31 @@ const $=s=>document.querySelector(s);
 const canvas=$('#canvas'),ctx=canvas.getContext('2d');
 const world={xmin:-1.2,xmax:9.2,ymin:-3.5,ymax:3.5};
 let stage=0,expressions=[],nextId=1,activeId=null,riderX=0,playing=false,finished=false,crashed=false,frame=0,lastTime=0,trail=[],cw=1,ch=1,ratio=1,gateIndex=0;
-let unlocked=1;try{unlocked=clampUnlock(Number(localStorage.getItem("graphRunnerUnlocked")||1))}catch{}
-function clampUnlock(n){return Number.isFinite(n)?Math.max(1,Math.min(STAGES.length,Math.floor(n))):1}
+const COMPLETED_KEY='graphRunnerCompletedV1';
+let completed=new Set();
+try{
+ const saved=localStorage.getItem(COMPLETED_KEY);
+ if(saved!==null){const list=JSON.parse(saved);if(Array.isArray(list))completed=new Set(list.filter(n=>Number.isInteger(n)&&n>=0&&n<STAGES.length));}
+ else {
+  // Old versions only stored the sequentially unlocked level. The preceding levels were cleared.
+  const old=Number(localStorage.getItem('graphRunnerUnlocked')||1);
+  for(let i=0;i<Math.min(STAGES.length,Math.max(0,old-1));i++)completed.add(i);
+  localStorage.setItem(COMPLETED_KEY,JSON.stringify([...completed]));
+ }
+}catch{}
+function saveCompleted(){try{localStorage.setItem(COMPLETED_KEY,JSON.stringify([...completed].sort((a,b)=>a-b)))}catch{}}
+function setCompleted(index,yes){if(yes)completed.add(index);else completed.delete(index);saveCompleted();refreshStagePicker();renderStageCards();}
+function openStages(){renderStageCards();$('#stageOverlay').hidden=false;$('#closeStages').focus({preventScroll:true})}
+function closeStages(){ $('#stageOverlay').hidden=true;$('#showStages').focus({preventScroll:true})}
+function renderStageCards(){const container=$('#stageCards');container.replaceChildren();const num=completed.size;
+ $('#progressCount').textContent=`${num} / ${STAGES.length}`;$('#progressCompact').textContent=`${num}/${STAGES.length}`;$('#progressBar').style.width=(100*num/STAGES.length)+'%';
+ STAGES.forEach((item,i)=>{const card=document.createElement('div');card.className='stage-card'+(completed.has(i)?' played':'')+(stage===i?' current':'');
+  const choice=document.createElement('button');choice.className='stage-choice';choice.type='button';choice.innerHTML=`<div class="stage-index">STAGE ${String(i+1).padStart(2,'0')}${stage===i?' · プレイ中':''}</div><div class="stage-title"></div><div class="stage-level">難度 ${item.difficulty}　${(item.gates||[]).length} ゲート</div>`;
+  choice.querySelector('.stage-title').textContent=item.title;choice.setAttribute('aria-label',`ステージ${i+1} ${item.title}をプレイ`);choice.addEventListener('click',()=>{closeStages();loadStage(i)});
+  const check=document.createElement('button');check.className='stage-check';check.type='button';check.textContent=completed.has(i)?'✓':'○';check.setAttribute('aria-label',`ステージ${i+1}を${completed.has(i)?'未クリア':'クリア済み'}に変更`);check.setAttribute('aria-pressed',String(completed.has(i)));check.addEventListener('click',()=>setCompleted(i,!completed.has(i)));
+  card.append(choice,check);container.append(card)
+ });
+}
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const XP=x=>(x-world.xmin)/(world.xmax-world.xmin)*cw;
 const YP=y=>(world.ymax-y)/(world.ymax-world.ymin)*ch;
@@ -201,7 +246,7 @@ function putStatus(msg,type=''){const el=$('#status');el.textContent=msg;el.clas
 function activeExpr(){return expressions.find(e=>e.id===activeId)||expressions[0]}
 function updateFns(){for(let e of expressions){try{e.fn=parseFunction(e.text);e.error=''}catch(err){e.fn=null;e.error=err.message}}}
 function newExpr(text='',select=true){if(expressions.length>=4){putStatus('式は最大4本までです。','bad');return}const id=nextId++;expressions.push({id,text,visible:true,fn:null,error:'',color:COLORS[(id-1)%COLORS.length]});if(select)activeId=id;updateFns();renderRows();draw()}
-function resetMotion(quiet=false){cancelAnimationFrame(frame);playing=finished=crashed=false;riderX=0;gateIndex=0;trail=[];lastTime=0;$('#run').disabled=false;$('#run').textContent='▶ 走らせる';$('#next').disabled=true;if(!quiet)putStatus('式を調整して、もう一度挑戦しよう。');draw()}
+function resetMotion(quiet=false){cancelAnimationFrame(frame);playing=finished=crashed=false;riderX=0;gateIndex=0;trail=[];lastTime=0;$('#run').disabled=false;$('#run').textContent='▶ 走らせる';$('#next').disabled=stage>=STAGES.length-1;if(!quiet)putStatus('式を調整して、もう一度挑戦しよう。');draw()}
 function renderRows(focusId){const panel=$('#expressions');panel.innerHTML='';for(let ix=0;ix<expressions.length;ix++){const e=expressions[ix];const row=document.createElement('div');row.className='expr-row'+(activeId===e.id?' active':'');row.style.setProperty('--c',e.color);
   const toggle=document.createElement('button');toggle.className='color-toggle'+(e.visible?'':' hidden');toggle.setAttribute('aria-label',e.visible?'グラフを非表示':'グラフを表示');toggle.title='表示/非表示';toggle.addEventListener('click',()=>{e.visible=!e.visible;renderRows();draw()});
   const middle=document.createElement('div');middle.style.minWidth='0';const line=document.createElement('div');line.className='expr-main';const prefix=document.createElement('span');prefix.className='math-prefix';prefix.textContent='y =';
@@ -218,8 +263,8 @@ function renderRows(focusId){const panel=$('#expressions');panel.innerHTML='';fo
 }
 function updateActiveRows(){for(const row of $('#expressions').children){const input=row.querySelector('.expr-input');row.classList.toggle('active',Number(input.dataset.exprId)===activeId)}const ix=expressions.findIndex(e=>e.id===activeId);$('#pathName').textContent=`走行コース：式${ix+1}`}
 function updateNotes(){for(const e of expressions){const note=document.querySelector(`[data-note-id="${e.id}"]`);if(!note)continue;note.className='expr-note'+(e.error?' error':'');note.textContent=e.error||((e.id===activeId?'● 走る線':'タップで走行コースに選択')+(e.visible?'':' ／ 非表示'))}}
-function refreshStagePicker(){let select=$('#stageSelect'),prev=select.value;select.innerHTML='';STAGES.forEach((item,i)=>{const o=document.createElement('option');o.value=String(i);o.disabled=i>=unlocked;o.textContent=(i>=unlocked?'🔒 ':'')+String(i+1).padStart(2,'0')+' '+item.title;select.append(o)});select.value=String(stage)}
-function loadStage(i){if(i>=unlocked||i<0||i>=STAGES.length)return;stage=i;expressions=[];activeId=null;nextId=1;resetMotion(true);$('#stageCount').textContent=`STAGE ${String(i+1).padStart(2,'0')} / ${STAGES.length}　難度 ${STAGES[i].difficulty}`;$('#stageTitle').textContent=STAGES[i].title;$('#mission').textContent=STAGES[i].mission;refreshStagePicker();newExpr('');putStatus('下のボタンで式をつくって、▶ 走らせよう。');draw()}
+function refreshStagePicker(){let select=$('#stageSelect');select.innerHTML='';STAGES.forEach((item,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=(completed.has(i)?'✓ ':'')+String(i+1).padStart(2,'0')+' '+item.title;select.append(o)});select.value=String(stage);$('#progressCompact').textContent=`${completed.size}/${STAGES.length}`}
+function loadStage(i){if(!Number.isInteger(i)||i<0||i>=STAGES.length)return;stage=i;expressions=[];activeId=null;nextId=1;resetMotion(true);$('#stageCount').textContent=`STAGE ${String(i+1).padStart(2,'0')} / ${STAGES.length}　難度 ${STAGES[i].difficulty}`;$('#stageTitle').textContent=STAGES[i].title;$('#mission').textContent=STAGES[i].mission;refreshStagePicker();newExpr('');putStatus('下のボタンで式をつくって、▶ 走らせよう。');draw()}
 function draw(){if(!ctx||cw<2||ch<2)return;ctx.clearRect(0,0,cw,ch);ctx.fillStyle='#0d1c30';ctx.fillRect(0,0,cw,ch);
  const gradient=ctx.createLinearGradient(0,0,cw,ch);gradient.addColorStop(0,'#102b42');gradient.addColorStop(1,'#081a2c');ctx.fillStyle=gradient;ctx.fillRect(0,0,cw,ch);
  ctx.lineWidth=1;for(let x=-1;x<=9;x++){ctx.beginPath();ctx.moveTo(XP(x),0);ctx.lineTo(XP(x),ch);ctx.strokeStyle=x===0?'#8199bc':'#54718d40';ctx.lineWidth=x===0?1.7:1;ctx.stroke()}
@@ -256,10 +301,10 @@ function tick(now){if(!playing)return;let dt=lastTime?Math.min((now-lastTime)/10
   const gate=STAGES[stage].gates?.[gateIndex];if(gate&&riderX>=gate.x){let gy=safe(fn,gate.x);if(!Number.isFinite(gy)||Math.abs(gy-gate.y)>gate.r){stop(false,'ゲート'+(gateIndex+1)+'を通れなかった！');return}gateIndex++}
   trail.push([riderX,y]);
  }
- draw();if(riderX>=8-1e-6){stop(true,stage===STAGES.length-1?'全36ステージクリア！':'クリア！ 次のステージが開放されました。');return}
+ draw();if(riderX>=8-1e-6){stop(true,stage===STAGES.length-1?'クリア！ 全ステージの進捗は一覧で確認できます。':'クリア！ ステージ一覧にチェックが付きました。');return}
  frame=requestAnimationFrame(tick)
 }
-function stop(success,msg){playing=false;finished=success;crashed=!success;if(success&&unlocked<stage+2){unlocked=clampUnlock(stage+2);try{localStorage.setItem('graphRunnerUnlocked',String(unlocked))}catch{}refreshStagePicker()}$('#run').disabled=false;$('#run').textContent=success?'✓ もう一度走る':'↻ 再挑戦';$('#next').disabled=!(success&&stage<STAGES.length-1);putStatus(msg,success?'good':'bad');draw()}
+function stop(success,msg){playing=false;finished=success;crashed=!success;if(success)setCompleted(stage,true);$('#run').disabled=false;$('#run').textContent=success?'✓ もう一度走る':'↻ 再挑戦';$('#next').disabled=stage>=STAGES.length-1;putStatus(msg,success?'good':'bad');draw()}
 function selectedInput(){return document.querySelector(`.expr-input[data-expr-id="${activeId}"]`)}
 function commitInput(input,text,pos){const e=activeExpr();if(!e||!input)return;input.value=text;e.text=text;input.dispatchEvent(new Event('input',{bubbles:true}));input.focus({preventScroll:true});pos=clamp(pos,0,text.length);input.setSelectionRange(pos,pos)}
 function replaceSelection(insert,caretOffset=insert.length){const input=selectedInput();if(!input)return;const a=input.selectionStart??input.value.length,b=input.selectionEnd??a;commitInput(input,input.value.slice(0,a)+insert+input.value.slice(b),a+caretOffset)}
@@ -281,8 +326,11 @@ $('#add').addEventListener('click',()=>{newExpr('');updateActiveRows()});
 $('#hint').addEventListener('click',()=>putStatus(STAGES[stage].hint));
 $('#run').addEventListener('click',run);
 $('#reset').addEventListener('click',()=>resetMotion());
-$('#next').addEventListener('click',()=>{if(finished&&stage<STAGES.length-1)loadStage(stage+1)});
+$('#next').addEventListener('click',()=>{if(stage<STAGES.length-1)loadStage(stage+1)});
 $('#stageSelect').addEventListener('change',e=>loadStage(Number(e.target.value)));
+$('#showStages').addEventListener('click',openStages);$('#closeStages').addEventListener('click',closeStages);$('#closeStagesBottom').addEventListener('click',closeStages);
+$('#stageOverlay').addEventListener('click',e=>{if(e.target===$('#stageOverlay'))closeStages()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#stageOverlay').hidden)closeStages()});
 for(const btn of document.querySelectorAll('[data-tab]'))btn.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(b=>{let active=b===btn;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active))});document.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==btn.dataset.tab)});
 for(const btn of document.querySelectorAll('[data-ins],[data-key],[data-insert]')){btn.addEventListener('pointerdown',e=>e.preventDefault());btn.addEventListener('click',()=>{if(btn.dataset.ins!==undefined)replaceSelection(btn.dataset.ins);else if(btn.dataset.key)inputCommand(btn.dataset.key);else insertTemplate(btn.dataset.insert)})}
 window.addEventListener('resize',updateVisibleViewport);
@@ -292,7 +340,7 @@ document.addEventListener('focusin',()=>setTimeout(updateVisibleViewport,70));
 document.addEventListener('focusout',()=>setTimeout(updateVisibleViewport,140));
 window.addEventListener('orientationchange',()=>setTimeout(updateVisibleViewport,200));
 new ResizeObserver(()=>resizeCanvas()).observe($('#frame'));
-window.GRAPH_RUNNER_TEST={STAGES,parseFunction,pathCheck,collision,loadStage,replaceSelection,inputCommand,insertTemplate};
+window.GRAPH_RUNNER_TEST={STAGES,parseFunction,pathCheck,collision,loadStage,replaceSelection,inputCommand,insertTemplate,setCompleted,renderStageCards,getCompleted:()=>[...completed]};
 loadStage(0);updateVisibleViewport();resizeCanvas();
 </script>
 </body>
